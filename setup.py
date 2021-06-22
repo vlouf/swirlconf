@@ -22,7 +22,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/vlouf/swirlconf",
-    author="Jordan Brook",    
+    author="Valentin Louf",    
     # For a list of valid classifiers, see https://pypi.org/classifiers/
     classifiers=[  # Optional
         "Development Status :: 3 - Alpha",
@@ -35,7 +35,7 @@ setup(
         "Programming Language :: Python :: 3.9",
     ],
     keywords="radar weather meteorology correction",
-    # packages=find_packages(exclude=["notebook"]),
-    # install_requires=["numpy", "arm_pyart", "astropy", "scipy"],
+    packages=find_packages(exclude=["notebook"]),
+    install_requires=[],
     project_urls={"Source": "https://github.com/vlouf/swirlconf/",},
 )
