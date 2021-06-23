@@ -22,18 +22,19 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/vlouf/swirlconf",
-    author="Valentin Louf",    
+    author="Valentin Louf",
     # For a list of valid classifiers, see https://pypi.org/classifiers/
     classifiers=[  # Optional
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering :: Atmospheric Science",
-        "License :: OSI Approved :: MIT License",        
+        "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
     ],
     keywords="radar weather meteorology correction",
-    packages=find_packages(exclude=["notebook"]),    
+    packages=find_packages(exclude=["notebook"]),
+    install_requires=["pandas"],
     project_urls={"Source": "https://github.com/vlouf/swirlconf/",},
 )
