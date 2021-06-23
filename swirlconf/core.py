@@ -25,9 +25,16 @@ class Swirl():
         self.vols_path = os.path.join(root_dir, "vols")
         self.vvad_path = os.path.join(root_dir, "vvad")
         self.winds_path = os.path.join(root_dir, "winds")
+        self.check_paths_exist()
         self.set_regions(etc_dir)
         self.set_ports(etc_dir)
         self.set_switches(etc_dir)
+
+    def check_paths_exist(self):
+        for k, v in self.__dict__.items():
+            if "path" in k:
+                if not os.path.exists(v):
+                    raise FileNotFoundError(f"Directory {v} not found.")
 
     def set_regions(self, etc_dir):
         fname = os.path.join(etc_dir, "regions.json")
@@ -47,7 +54,7 @@ class Swirl():
                 self.rid_regions[n] = k
 
     def set_ports(self, etc_dir):
-        fname = os.path.join(etc_dir, "postmaster.conf")        
+        fname = os.path.join(etc_dir, "postmaster.conf")
         config = configparser.ConfigParser()
         config.read(fname)
         self.port_unravel_service = config.getint("unravel", "service")
@@ -56,9 +63,9 @@ class Swirl():
         self.port_flow_dispatcher = config.getint("flow", "dispatcher")
         self.port_winds_service = config.getint("winds", "service")
         self.port_winds_dispatcher = config.getint("winds", "dispatcher")
-    
+
     def set_switches(self, etc_dir):
-        fname = os.path.join(etc_dir, "postmaster.conf")        
+        fname = os.path.join(etc_dir, "postmaster.conf")
         config = configparser.ConfigParser()
         config.read(fname)
         self.do_unravel = config.getboolean("unravel", "active")
