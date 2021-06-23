@@ -8,8 +8,11 @@ __date__ = "2021/06"
 
 import os
 import json
+import time
 import warnings
 import configparser
+
+import pandas as pd
 
 
 class Swirl():
@@ -29,6 +32,7 @@ class Swirl():
         self.set_regions(etc_dir)
         self.set_ports(etc_dir)
         self.set_switches(etc_dir)
+        self.set_radar_site_info()
 
     def check_paths_exist(self):
         for k, v in self.__dict__.items():
@@ -64,6 +68,12 @@ class Swirl():
         self.port_winds_service = config.getint("winds", "service")
         self.port_winds_dispatcher = config.getint("winds", "dispatcher")
 
+    def set_radar_site_info(self):
+        radar_fname = os.path.join(self.config_path, "radar_site_list.csv")
+        self.radar_site_info = pd.read_csv(radar_fname)
+        if len(self.radar_site_info) == 0:
+            raise ValueError(f"Invalid radar configuration file: {radar_fname}. Exiting code.")
+
     def set_switches(self, etc_dir):
         fname = os.path.join(etc_dir, "postmaster.conf")
         config = configparser.ConfigParser()
@@ -71,3 +81,22 @@ class Swirl():
         self.do_unravel = config.getboolean("unravel", "active")
         self.do_flow = config.getboolean("flow", "active")
         self.do_winds = config.getboolean("winds", "active")
+
+
+class Chronos:
+    """
+    https://www.youtube.com/watch?v=QcHvzNBtlOw
+    """
+
+    def __init__(self, messg=None):
+        self.messg = messg
+
+    def __enter__(self):
+        self.start = time.time()
+
+    def __exit__(self, ntype, value, traceback):
+        self.time = time.time() - self.start
+        if self.messg is not None:
+            print(f"{self.messg} took {self.time:.2f}s.")
+        else:
+            print(f"Processed in {self.time:.2f}s.")
