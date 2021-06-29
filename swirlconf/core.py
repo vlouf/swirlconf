@@ -82,6 +82,38 @@ class Swirl():
         self.do_flow = config.getboolean("flow", "active")
         self.do_winds = config.getboolean("winds", "active")
 
+    def get_lat(self, rid):
+        """
+        Get latitude for given radar ID.
+
+        Parameter:
+        ==========
+        rid: int
+            Radar Rapic ID
+
+        Returns:
+        ========
+        latitude: float
+            Radar site latitude
+        """
+        return self.radar_site_info.loc[self.radar_site_info.id == rid].site_lat.values[0]
+
+    def get_lon(self, rid):
+        """
+        Get longitude for given radar ID.
+
+        Parameter:
+        ==========
+        rid: int
+            Radar Rapic ID
+
+        Returns:
+        ========
+        longitude: float
+            Radar site longitude
+        """
+        return self.radar_site_info.loc[self.radar_site_info.id == rid].site_lon.values[0]
+
 
 class Chronos:
     """
