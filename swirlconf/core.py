@@ -4,7 +4,7 @@ SWIRL Global configuration class.
 __authors__ = "Valentin Louf"
 __contact__ = "valentin.louf@bom.gov.au"
 __version__ = "0.5.0"
-__date__ = "2021/06"
+__date__ = "2021/07"
 
 import os
 import json
@@ -22,6 +22,7 @@ class Swirl():
         self.config_path = os.path.join(root_dir, "config")
         self.config_3dwinds_path = os.path.join(root_dir, "config", "3dwinds")
         self.dvad_path = os.path.join(root_dir, "dvad")
+        self.diagnostics_path = os.path.join(root_dir, "diagnostics")
         self.flow_path = os.path.join(root_dir, "flow")
         self.grids_path = os.path.join(root_dir, "grids")
         self.log_path = os.path.join(root_dir, "log")
@@ -67,6 +68,8 @@ class Swirl():
         self.port_flow_dispatcher = config.getint("flow", "dispatcher")
         self.port_winds_service = config.getint("winds", "service")
         self.port_winds_dispatcher = config.getint("winds", "dispatcher")
+        self.port_diagnostics_service = config.getint("diagnostics", "service")
+        self.port_diagnostics_dispatcher = config.getint("diagnostics", "dispatcher")
 
     def set_radar_site_info(self):
         radar_fname = os.path.join(self.config_path, "radar_site_list.csv")
@@ -81,6 +84,7 @@ class Swirl():
         self.do_unravel = config.getboolean("unravel", "active")
         self.do_flow = config.getboolean("flow", "active")
         self.do_winds = config.getboolean("winds", "active")
+        self.do_diagnostics = config.getboolean("diagnostics", "active")
 
     def get_lat(self, rid):
         """
