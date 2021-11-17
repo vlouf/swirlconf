@@ -3,8 +3,8 @@ SWIRL Global configuration class.
 """
 __authors__ = "Valentin Louf"
 __contact__ = "valentin.louf@bom.gov.au"
-__version__ = "0.5.0"
-__date__ = "2021/07"
+__version__ = "0.5.1"
+__date__ = "2021/11/17"
 
 import os
 import json
@@ -17,7 +17,7 @@ import pandas as pd
 
 class Swirl():
     def __init__(self, root_dir="/srv/data/swirl", etc_dir="/etc/opt/swirl/") -> None:
-        self.azshear_path = os.path.join(root_dir, "azshear")
+        # self.azshear_path = os.path.join(root_dir, "azshear")
         self.calib_path = os.path.join(root_dir, "calib")
         self.config_path = os.path.join(root_dir, "config")
         self.config_3dwinds_path = os.path.join(root_dir, "config", "3dwinds")
