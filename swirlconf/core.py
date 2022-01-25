@@ -3,14 +3,19 @@ SWIRL Global configuration class.
 """
 __authors__ = "Valentin Louf"
 __contact__ = "valentin.louf@bom.gov.au"
-__version__ = "0.5.1"
-__date__ = "2021/11/17"
+__version__ = "0.6.0"
+__date__ = "2022/01/25"
 
 import os
+import re
+import glob
 import json
 import time
+import datetime
 import warnings
 import configparser
+
+from typing import List
 
 import pandas as pd
 
@@ -182,6 +187,48 @@ optical_flow
 }
 """
         return txt
+
+    def update_rids_in_region(self, region_name: str, radar_dtime: datetime.datetime, max_radar_downtime: int) -> List[int]:
+        """
+        Check if any radar in the region is down and update the RID list.
+        (Checked if the original VOL files came in).
+
+        Parameter:
+        ==========
+        region_name: str
+        radar_dtime: datetime.datetime
+
+        Returns:
+        ========
+        valid_rids: List[int, ...]
+        """
+        get_time = lambda x: datetime.datetime.strptime(re.findall("[0-9]{8}_[0-9]{6}", x)[-1], "%Y%m%d_%H%M%S")
+
+        regions_rids = self.regions[region_name]
+        datestr = radar_dtime.strftime("%Y%m%d")
+        valid_rids = []
+        for r in regions_rids:
+            path = os.path.join(self.vols_path, str(r), datestr)
+            if not os.path.exists(path):
+                print(f"No data for radar {r} existing today. Removing radar {r} from region.")
+                continue
+
+            flist = sorted(glob.glob(os.path.join(path, "*.*")))
+            if len(flist) == 0:
+                print(f"No file found for radar {r}. Removing radar {r} from region.")
+                continue
+
+            rtime = get_time(flist[-1])
+            delta = radar_dtime - rtime
+            if delta.total_seconds() > max_radar_downtime:
+                print(f"No data for radar {r} for {delta}. Removing radar {r} from region.")
+            else:
+                valid_rids.append(r)
+
+        if len(valid_rids) == 0:
+            raise ValueError(f"No radar currently available for region {region_name}.")
+
+        return valid_rids
 
 
 class Chronos:
