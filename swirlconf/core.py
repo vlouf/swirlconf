@@ -112,6 +112,8 @@ class Swirl():
         self.port_unravel_dispatcher = config.getint("unravel", "dispatcher")
         self.port_flow_service = config.getint("flow", "service")
         self.port_flow_dispatcher = config.getint("flow", "dispatcher")
+        self.port_nowcast_service = config.getint("nowcast", "service")
+        self.port_nowcast_dispatcher = config.getint("nowcast", "dispatcher")
         self.port_winds_service = config.getint("winds", "service")
         self.port_winds_dispatcher = config.getint("winds", "dispatcher")
         self.port_diagnostics_service = config.getint("diagnostics", "service")
