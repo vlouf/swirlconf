@@ -33,6 +33,7 @@ class Swirl():
         self.flow_path = os.path.join(root_dir, "flow")
         self.grids_path = os.path.join(root_dir, "grids")
         self.log_path = os.path.join(root_dir, "log")
+        self.nowcast_path = os.path.join(root_dir, "nowcast")
         self.vols_path = os.path.join(root_dir, "vols")
         self.vvad_path = os.path.join(root_dir, "vvad")
         self.winds_path = os.path.join(root_dir, "winds")
