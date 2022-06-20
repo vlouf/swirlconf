@@ -25,8 +25,8 @@ import pandas as pd
 class Swirl():
     def __init__(self, root_dir="/srv/data/swirl", etc_dir="/etc/opt/swirl/", cmss_dir="/srv/data/cmss-client") -> None:
         self.calib_path = os.path.join(root_dir, "calib")
-        self.cmss_egress_path = os.path.join(cmss_dir, "egress")
-        self.cmss_ingress_path = os.path.join(cmss_dir, "ingress")
+        self.cmss_egress_path = os.path.join(cmss_dir, "swirl-egress")
+        self.cmss_ingress_path = os.path.join(cmss_dir, "swirl-ingress")
         self.config_path = os.path.join(root_dir, "config")
         self.config_3dwinds_path = os.path.join(root_dir, "config", "3dwinds")
         self.dvad_path = os.path.join(root_dir, "dvad")
@@ -48,6 +48,8 @@ class Swirl():
     def check_paths_exist(self):
         for k, v in self.__dict__.items():
             if "path" in k:
+                if "cmss" in k:
+                    continue
                 if not os.path.exists(v):
                     raise FileNotFoundError(f"Directory {v} not found.")
 
