@@ -4,7 +4,7 @@ SWIRL Global configuration class.
 __authors__ = "Valentin Louf"
 __contact__ = "valentin.louf@bom.gov.au"
 __version__ = "0.6.0"
-__date__ = "2022/01/25"
+__date__ = "2022/06/20"
 
 import os
 import re
@@ -23,9 +23,10 @@ import pandas as pd
 
 
 class Swirl():
-    def __init__(self, root_dir="/srv/data/swirl", etc_dir="/etc/opt/swirl/") -> None:
-        # self.azshear_path = os.path.join(root_dir, "azshear")
+    def __init__(self, root_dir="/srv/data/swirl", etc_dir="/etc/opt/swirl/", cmss_dir="/srv/data/cmss-client") -> None:
         self.calib_path = os.path.join(root_dir, "calib")
+        self.cmss_egress_path = os.path.join(cmss_dir, "egress")
+        self.cmss_ingress_path = os.path.join(cmss_dir, "ingress")
         self.config_path = os.path.join(root_dir, "config")
         self.config_3dwinds_path = os.path.join(root_dir, "config", "3dwinds")
         self.dvad_path = os.path.join(root_dir, "dvad")
@@ -263,7 +264,7 @@ optical_flow
 
         distance = np.sqrt((x[1] - x[0]) ** 2 + (y[1] - y[0]) ** 2)
         return distance
-        
+
     def update_rids_in_region(self, region_name: str, radar_dtime: datetime.datetime, max_radar_downtime: int) -> List[int]:
         """
         Check if any radar in the region is down and update the RID list.
