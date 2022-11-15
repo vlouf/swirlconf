@@ -4,17 +4,21 @@ SWIRL Global configuration class.
 __authors__ = "Valentin Louf"
 __contact__ = "valentin.louf@bom.gov.au"
 __version__ = "0.6.0"
-__date__ = "2022/06/20"
+__date__ = "2022/11/15"
 
 import os
 import re
 import glob
 import json
 import time
+import pickle
+import asyncio
 import datetime
 import warnings
+import traceback
 import configparser
 
+from functools import wraps
 from typing import List, Tuple
 
 import pyproj
@@ -108,19 +112,23 @@ class Swirl():
                 self.rid_regions[n] = k
 
     def set_ports(self, etc_dir):
-        fname = os.path.join(etc_dir, "postmaster.conf")
-        config = configparser.ConfigParser()
-        config.read(fname)
-        self.port_unravel_service = config.getint("unravel", "service")
-        self.port_unravel_dispatcher = config.getint("unravel", "dispatcher")
-        self.port_flow_service = config.getint("flow", "service")
-        self.port_flow_dispatcher = config.getint("flow", "dispatcher")
-        self.port_nowcast_service = config.getint("nowcast", "service")
-        self.port_nowcast_dispatcher = config.getint("nowcast", "dispatcher")
-        self.port_winds_service = config.getint("winds", "service")
-        self.port_winds_dispatcher = config.getint("winds", "dispatcher")
-        self.port_diagnostics_service = config.getint("diagnostics", "service")
-        self.port_diagnostics_dispatcher = config.getint("diagnostics", "dispatcher")
+        try:
+            fname = os.path.join(etc_dir, "postmaster.conf")
+            config = configparser.ConfigParser()
+            config.read(fname)
+            self.port_manager = config.getint("manager", "service")
+            self.port_flow_service = config.getint("flow", "service")
+            self.port_flow_dispatcher = config.getint("flow", "dispatcher")
+            self.port_nowcast_service = config.getint("nowcast", "service")
+            self.port_winds_service = config.getint("winds", "service")
+            self.port_diagnostics_service = config.getint("diagnostics", "service")
+        except Exception:
+            self.port_manager = 9900
+            self.port_flow_dispatcher = 9920
+            self.port_flow_service = 9921
+            self.port_winds_service = 9931
+            self.port_diagnostics_service = 9941
+            self.port_nowcast_service = 9951
 
     def set_radar_site_info(self):
         radar_fname = os.path.join(self.config_path, "radar_site_list.csv")
@@ -327,3 +335,75 @@ class Chronos:
             print(f"{self.messg} took {self.time:.2f}s.")
         else:
             print(f"Processed in {self.time:.2f}s.")
+
+
+def buffer(func):
+    """
+    Decorator to catch and process error messages.
+    """
+    if asyncio.iscoroutinefunction(func):
+
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            try:
+                rslt = await func(*args, **kwargs)
+            except FileExistsError:
+                return None
+            except FileNotFoundError:
+                print(f"Could not find all files.")
+                return None
+            except Exception:
+                traceback.print_exc()
+                return None
+            return rslt
+
+    else:
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                rslt = func(*args, **kwargs)
+            except FileExistsError:
+                return None
+            except FileNotFoundError:
+                print(f"Could not find all files.")
+                return None
+            except Exception:
+                traceback.print_exc()
+                return None
+            return rslt
+
+    return wrapper
+
+
+async def decode_message(message):
+    data = pickle.loads(message)
+    for key in ["who", "what", "where", "when", "uid"]:
+        try:
+            _ = data[key]
+        except KeyError:
+            raise KeyError(f"Key: {key} not found in incoming message.")
+
+    return data
+
+
+async def dispatch_message(message: str, port: int) -> None:
+    """
+    Handle outgoing connection.
+    Dispatch message (assuming that the message is a valid radar file name) to
+    the valid.
+
+    Parameters:
+    ===========
+    message: str
+        Message to send to the live service.
+    """
+    try:
+        _, writer = await asyncio.open_connection("127.0.0.1", port)
+        writer.write(message)
+        writer.close()
+    except ConnectionRefusedError:
+        print(f"Could not send message to port {port}.")
+        traceback.print_exc()
+
+    return None
