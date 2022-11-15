@@ -44,8 +44,7 @@ class Swirl():
         self.winds_path = os.path.join(root_dir, "winds")
         self.check_paths_exist()
         self.set_regions(etc_dir)
-        self.set_ports(etc_dir)
-        self.set_switches(etc_dir)
+        self.set_ports(etc_dir)        
         self.set_radar_site_info()
         self.layered_conf = self._get_conf()
 
@@ -134,16 +133,7 @@ class Swirl():
         radar_fname = os.path.join(self.config_path, "radar_site_list.csv")
         self.radar_site_info = pd.read_csv(radar_fname)
         if len(self.radar_site_info) == 0:
-            raise ValueError(f"Invalid radar configuration file: {radar_fname}. Exiting code.")
-
-    def set_switches(self, etc_dir):
-        fname = os.path.join(etc_dir, "postmaster.conf")
-        config = configparser.ConfigParser()
-        config.read(fname)
-        self.do_unravel = config.getboolean("unravel", "active")
-        self.do_flow = config.getboolean("flow", "active")
-        self.do_winds = config.getboolean("winds", "active")
-        self.do_diagnostics = config.getboolean("diagnostics", "active")
+            raise ValueError(f"Invalid radar configuration file: {radar_fname}. Exiting code.")    
 
     def get_lat(self, rid):
         """
