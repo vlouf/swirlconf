@@ -11,19 +11,11 @@ import re
 import glob
 import json
 import time
-import pickle
-import asyncio
 import datetime
 import warnings
-import traceback
 import configparser
 
-from functools import wraps
-from typing import List, Tuple
-
-import pyproj
-import numpy as np
-import pandas as pd
+from typing import List
 
 
 class Swirl():
@@ -55,43 +47,6 @@ class Swirl():
                     continue
                 if not os.path.exists(v):
                     raise FileNotFoundError(f"Directory {v} not found.")
-
-    def compute_baricentre(self, region_rids: List[int]) -> Tuple[float, float, np.ndarray]:
-        """
-        Compute the barycentre (central point) of the multi-Doppler region
-
-        Parameters:
-        ===========
-        radar_region: str
-            Name of the multi-Doppler region.
-
-        Returns:
-        ========
-        bar_lon: float
-            Longitude of the barycentre of that region
-        bar_lat: float
-            Latitude of the barycentre of that region
-        rids: np.ndarray
-            List of radar ID sorted by Cartesian from the barycentre (closest first).
-        """
-        nl = len(region_rids)
-        if nl < 2:
-            raise ValueError(f"Not a multi-Doppler region. {region_rids}")
-
-        latitudes = np.zeros(nl)
-        longitudes = np.zeros(nl)
-        cartesian_distance = np.zeros(nl)
-        rids = np.zeros(nl, dtype=int)
-        for idx, rid in enumerate(region_rids):
-            latitudes[idx] = self.get_lat(rid)
-            longitudes[idx] = self.get_lon(rid)
-            rids[idx] = rid
-
-        bar_lat = latitudes.sum() / len(latitudes)
-        bar_lon = longitudes.sum() / len(longitudes)
-
-        cartesian_distance = np.sqrt((latitudes - bar_lat) ** 2 + (longitudes - bar_lon) ** 2)
-        return bar_lon, bar_lat, rids[np.argsort(cartesian_distance)]
 
     def set_regions(self, etc_dir):
         fname = os.path.join(etc_dir, "regions.json")
@@ -130,42 +85,12 @@ class Swirl():
             self.port_nowcast_service = 9951
 
     def set_radar_site_info(self):
+        import pandas as pd
+
         radar_fname = os.path.join(self.config_path, "radar_site_list.csv")
         self.radar_site_info = pd.read_csv(radar_fname)
         if len(self.radar_site_info) == 0:
             raise ValueError(f"Invalid radar configuration file: {radar_fname}. Exiting code.")    
-
-    def get_lat(self, rid):
-        """
-        Get latitude for given radar ID.
-
-        Parameter:
-        ==========
-        rid: int
-            Radar Rapic ID
-
-        Returns:
-        ========
-        latitude: float
-            Radar site latitude
-        """
-        return self.radar_site_info.loc[self.radar_site_info.id == rid].site_lat.values[0]
-
-    def get_lon(self, rid):
-        """
-        Get longitude for given radar ID.
-
-        Parameter:
-        ==========
-        rid: int
-            Radar Rapic ID
-
-        Returns:
-        ========
-        longitude: float
-            Radar site longitude
-        """
-        return self.radar_site_info.loc[self.radar_site_info.id == rid].site_lon.values[0]
 
     def _get_conf(self):
         txt = """
@@ -231,40 +156,6 @@ optical_flow
 """
         return txt
 
-    def get_distance_between_radars(self, r0: int, r1: int) -> float:
-        """
-        Compute the distance between 2 radars (in meters)
-
-        Parameters:
-        ===========
-        r0: int
-            Radar ID first radar.
-        r1: int
-            Radar ID second radar.
-
-        Returns:
-        ========
-        distance: float
-            Distance in m.
-        """
-        proj = pyproj.Proj(
-            "+proj=aea +lat_1=-32.2 +lat_2=-35.2 +lon_0=151.209 +lat_0=-33.7008 +a=6378137 +b=6356752.31414 +units=m"
-        )
-        radar_site_info = self.radar_site_info
-        x = np.zeros((2))
-        y = np.zeros((2))
-        for idx, rid in enumerate([r0, r1]):
-            df = radar_site_info[radar_site_info.id == rid]
-            lat = df.site_lat.values
-            lon = df.site_lon.values
-            try:
-                x[idx], y[idx] = proj(lon, lat)
-            except ValueError:
-                raise ValueError(f"x:{x}, y:{y}, idx:{idx}.")
-
-        distance = np.sqrt((x[1] - x[0]) ** 2 + (y[1] - y[0]) ** 2)
-        return distance
-
     def update_rids_in_region(self, region_name: str, radar_dtime: datetime.datetime, max_radar_downtime: int) -> List[int]:
         """
         Check if any radar in the region is down and update the RID list.
@@ -325,75 +216,3 @@ class Chronos:
             print(f"{self.messg} took {self.time:.2f}s.")
         else:
             print(f"Processed in {self.time:.2f}s.")
-
-
-def buffer(func):
-    """
-    Decorator to catch and process error messages.
-    """
-    if asyncio.iscoroutinefunction(func):
-
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            try:
-                rslt = await func(*args, **kwargs)
-            except FileExistsError:
-                return None
-            except FileNotFoundError:
-                print(f"Could not find all files.")
-                return None
-            except Exception:
-                traceback.print_exc()
-                return None
-            return rslt
-
-    else:
-
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            try:
-                rslt = func(*args, **kwargs)
-            except FileExistsError:
-                return None
-            except FileNotFoundError:
-                print(f"Could not find all files.")
-                return None
-            except Exception:
-                traceback.print_exc()
-                return None
-            return rslt
-
-    return wrapper
-
-
-async def decode_message(message):
-    data = pickle.loads(message)
-    for key in ["who", "what", "where", "when", "uid"]:
-        try:
-            _ = data[key]
-        except KeyError:
-            raise KeyError(f"Key: {key} not found in incoming message.")
-
-    return data
-
-
-async def dispatch_message(message: str, port: int) -> None:
-    """
-    Handle outgoing connection.
-    Dispatch message (assuming that the message is a valid radar file name) to
-    the valid.
-
-    Parameters:
-    ===========
-    message: str
-        Message to send to the live service.
-    """
-    try:
-        _, writer = await asyncio.open_connection("127.0.0.1", port)
-        writer.write(message)
-        writer.close()
-    except ConnectionRefusedError:
-        print(f"Could not send message to port {port}.")
-        traceback.print_exc()
-
-    return None
