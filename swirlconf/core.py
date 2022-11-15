@@ -37,8 +37,7 @@ class Swirl():
         self.check_paths_exist()
         self.set_regions(etc_dir)
         self.set_ports(etc_dir)        
-        self.set_radar_site_info()
-        self.layered_conf = self._get_conf()
+        self.set_radar_site_info()        
 
     def check_paths_exist(self):
         for k, v in self.__dict__.items():
@@ -91,70 +90,7 @@ class Swirl():
         self.radar_site_info = pd.read_csv(radar_fname)
         if len(self.radar_site_info) == 0:
             raise ValueError(f"Invalid radar configuration file: {radar_fname}. Exiting code.")    
-
-    def _get_conf(self):
-        txt = """
-# grid size
-size "301 301"
-
-# top left coordinates
-left_top "-150500 150500"
-
-# grid resolution
-cell_delta "1000 -1000"
-
-# horizontal grid units
-units m
-
-# altitude of lowest layer (m)
-altitude_base 0.0
-
-# altitude step between layers (m)
-altitude_step 500.0
-
-# number of layers
-layer_count 41
-
-# radar moment to generate CAPPIs from
-moment DBZH
-
-# whether to output the cappis as well as flow fields
-output_cappis true
-
-# whether to output the flow magnitude and angle fields
-output_polar true
-
-# maximum distance from CAPPI altitude to use reflectivities
-max_alt_dist 20000
-
-# exponent for inverse distance weighting when interpolating between vertical levels (2 is a good default)
-idw_pwr 2.0
-
-# threshold out cappis to this minimum DBZ before tracking
-min_dbz 20
-
-# Matrix orientation
-origin xy
-
-# speckle filter: suppress pixels with less than this many non-zero neighbours (3x3)
-speckle_min_neighbours 3
-
-# speckle filter: number of times to apply speckle filter
-speckle_iterations 3
-
-# parameters for optical flow algorithm
-optical_flow
-{
-  alpha 80
-  gamma 7.0
-  scales 100
-  zfactor 0.5
-  tol 0.005
-  initer 3
-  outiter 12
-}
-"""
-        return txt
+        return None
 
     def update_rids_in_region(self, region_name: str, radar_dtime: datetime.datetime, max_radar_downtime: int) -> List[int]:
         """
