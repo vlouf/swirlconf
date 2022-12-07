@@ -3,8 +3,8 @@ SWIRL Global configuration class.
 """
 __authors__ = "Valentin Louf"
 __contact__ = "valentin.louf@bom.gov.au"
-__version__ = "0.6.0"
-__date__ = "2022/11/15"
+__version__ = "1.0.0"
+__date__ = "2022/12/07"
 
 import os
 import re
@@ -18,26 +18,32 @@ import configparser
 from typing import List
 
 
-class Swirl():
-    def __init__(self, root_dir="/srv/data/swirl", etc_dir="/etc/opt/swirl/", cmss_dir="/srv/data/cmss-client") -> None:
+class Swirl:
+    def __init__(
+        self, root_dir="/srv/data/swirl", etc_dir="/etc/opt/swirl/", cmss_dir="/srv/data/cmss-client", do_checks=True
+    ) -> None:
         self.calib_path = os.path.join(root_dir, "calib")
         self.cmss_egress_path = os.path.join(cmss_dir, "swirl-egress")
         self.cmss_ingress_path = os.path.join(cmss_dir, "swirl-ingress")
         self.config_path = os.path.join(root_dir, "config")
         self.config_3dwinds_path = os.path.join(root_dir, "config", "3dwinds")
         self.dvad_path = os.path.join(root_dir, "dvad")
-        self.diagnostics_path = os.path.join(root_dir, "diagnostics")
+        self.diagnostics_path = os.path.join(root_dir, "diagnostics")        
         self.flow_path = os.path.join(root_dir, "flow")
         self.grids_path = os.path.join(root_dir, "grids")
         self.log_path = os.path.join(root_dir, "log")
         self.nowcast_path = os.path.join(root_dir, "nowcast")
+        self.realtime_path = os.path.join(root_dir, "realtime")
         self.vols_path = os.path.join(root_dir, "vols")
         self.vvad_path = os.path.join(root_dir, "vvad")
         self.winds_path = os.path.join(root_dir, "winds")
-        self.check_paths_exist()
+        if do_checks:
+            self.check_paths_exist()
         self.set_regions(etc_dir)
-        self.set_ports(etc_dir)        
-        self.set_radar_site_info()        
+        self.set_ports(etc_dir)
+        self.set_radar_site_info()
+        # Web pages:
+        self.html_dir = "/srv/web/swirl/www/html"
 
     def check_paths_exist(self):
         for k, v in self.__dict__.items():
@@ -45,7 +51,7 @@ class Swirl():
                 if "cmss" in k:
                     continue
                 if not os.path.exists(v):
-                    raise FileNotFoundError(f"Directory {v} not found.")
+                    raise FileNotFoundError(f"Directory {v} not found.")    
 
     def set_regions(self, etc_dir):
         fname = os.path.join(etc_dir, "regions.json")
@@ -89,10 +95,12 @@ class Swirl():
         radar_fname = os.path.join(self.config_path, "radar_site_list.csv")
         self.radar_site_info = pd.read_csv(radar_fname)
         if len(self.radar_site_info) == 0:
-            raise ValueError(f"Invalid radar configuration file: {radar_fname}. Exiting code.")    
+            raise ValueError(f"Invalid radar configuration file: {radar_fname}. Exiting code.")
         return None
 
-    def update_rids_in_region(self, region_name: str, radar_dtime: datetime.datetime, max_radar_downtime: int) -> List[int]:
+    def update_rids_in_region(
+        self, region_name: str, radar_dtime: datetime.datetime, max_radar_downtime: int
+    ) -> List[int]:
         """
         Check if any radar in the region is down and update the RID list.
         (Checked if the original VOL files came in).
