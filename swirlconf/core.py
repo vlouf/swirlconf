@@ -81,6 +81,7 @@ class Swirl:
             self.port_nowcast_service = config.getint("nowcast", "service")
             self.port_winds_service = config.getint("winds", "service")
             self.port_diagnostics_service = config.getint("diagnostics", "service")
+            self.port_success_service = config.getint("success", "service")
         except Exception:
             self.port_manager = 9900
             self.port_flow_dispatcher = 9920
@@ -88,6 +89,7 @@ class Swirl:
             self.port_winds_service = 9931
             self.port_diagnostics_service = 9941
             self.port_nowcast_service = 9951
+            self.port_success_service = 9961
 
     def set_radar_site_info(self):
         import pandas as pd
