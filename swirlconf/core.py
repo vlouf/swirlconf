@@ -30,7 +30,7 @@ class Swirl:
         self.dvad_path = os.path.join(root_dir, "dvad")
         self.diagnostics_path = os.path.join(root_dir, "diagnostics")        
         self.flow_path = os.path.join(root_dir, "flow")
-        self.grids_path = os.path.join(root_dir, "grids")
+        # self.grids_path = os.path.join(root_dir, "grids")
         self.log_path = os.path.join(root_dir, "log")
         self.nowcast_path = os.path.join(root_dir, "nowcast")
         self.realtime_path = os.path.join(root_dir, "realtime")
